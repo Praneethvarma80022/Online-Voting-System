@@ -92,16 +92,15 @@ The project is organized into two main directories: `Backend` for the server-sid
 │   └── server.js
 │
 └── Frontend/
-├── public/
-├── src/
-│   ├── components/
-│   ├── context/
-│   └── ...
-├── .env
-├── .gitignore
-├── package.json
-└── README.md
-
+    ├── public/
+    ├── src/
+    │   ├── components/
+    │   ├── context/
+    │   └── ...
+    ├── .env
+    ├── .gitignore
+    ├── package.json
+    └── README.md
 ***
 
 ## 🏁 Getting Started
