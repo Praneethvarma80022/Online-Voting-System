@@ -79,28 +79,6 @@ This is a full-stack web application designed to facilitate secure online voting
 
 ***
 
-## 📂 Project Structure
-
-The project is organized into two main directories: `Backend` for the server-side code and `Frontend` for the client-side React application.
-
-.
-├── Backend/
-│   ├── models/
-│   ├── node_modules/
-│   ├── .env
-│   ├── package.json
-│   └── server.js
-│
-└── Frontend/
-    ├── public/
-    ├── src/
-    │   ├── components/
-    │   ├── context/
-    │   └── ...
-    ├── .env
-    ├── .gitignore
-    ├── package.json
-    └── README.md
 ***
 
 ## 🏁 Getting Started
