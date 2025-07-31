@@ -1,0 +1,149 @@
+/* General container for the page */
+.voting-container {
+  max-width: 950px;
+  margin: 2rem auto;
+  padding: 2rem 2.5rem;
+  background-color: #ffffff;
+  border-radius: 12px;
+  text-align: center;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+}
+
+/* Centered headline for the page title */
+.ct-headline {
+  text-align: center;
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: #1a202c;
+  margin-bottom: 2.5rem;
+}
+
+/* Styling for the results table */
+.voting-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+/* Table header styles */
+.table-header {
+  background-color: #f7fafc;
+  padding: 1rem 1.5rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #4a5568;
+  border-bottom: 2px solid #e2e8f0;
+  text-align: left;
+}
+
+/* Table data cell styles */
+.table-data {
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid #e2e8f0;
+  color: #2d3748;
+  vertical-align: middle;
+}
+
+.voting-table tbody tr:last-child .table-data {
+  border-bottom: none;
+}
+
+.voting-table tbody tr {
+  transition: background-color 0.2s ease-in-out;
+}
+
+.voting-table tbody tr:hover {
+  background-color: #f8f9fa;
+}
+
+/* Styling for the party/candidate images */
+.member-image {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  align-items: center;
+  object-fit: cover;
+  border: 2px solid #edf2f7;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+/* Custom Radio Button */
+.vote-radio {
+  -webkit-appearance: none;
+  appearance: none;
+  background-color: #fff;
+  margin: 0;
+  font: inherit;
+  color: currentColor;
+  width: 1.5em;
+  height: 1.5em;
+  border: 0.15em solid #cbd5e0;
+  border-radius: 50%;
+  transform: translateY(-0.075em);
+  display: grid;
+  place-content: center;
+  cursor: pointer;
+}
+
+.vote-radio::before {
+  content: "";
+  width: 0.85em;
+  height: 0.85em;
+  border-radius: 50%;
+  transform: scale(0);
+  transition: 120ms transform ease-in-out;
+  box-shadow: inset 1em 1em #4F46E5;
+}
+
+.vote-radio:checked::before {
+  transform: scale(1);
+}
+
+/* Submit Button */
+.submit-vote-button {
+  display: block;
+  width: 100%;
+  padding: 1rem;
+  margin-top: 2rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #fff;
+  background: linear-gradient(90deg, #4F46E5, #6366F1);
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(79, 70, 229, 0.4);
+}
+
+.submit-vote-button:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(79, 70, 229, 0.5);
+}
+
+.submit-vote-button:disabled {
+  background: #a5b4fc;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+/* Styling for loading and error messages */
+.loading-container,
+.error-container {
+  text-align: center;
+  padding: 5rem 2rem;
+  font-size: 1.1rem;
+  color: #718096;
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  max-width: 900px;
+  margin: 2rem auto;
+}
+
+.error-container {
+  color: #c53030;
+  font-weight: 500;
+}

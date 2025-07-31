@@ -1,11 +1,8 @@
 import React from 'react';
 import { createContext, useState, useContext } from 'react';
-import LoadingSpinner from '../components/LoadingSpinner'; // Adjust path if needed
+import LoadingSpinner from '../components/LoadingSpinner'; 
 
-// 1. Create the context
 const LoadingContext = createContext();
-
-// 2. Create a "provider" component
 export function LoadingProvider({ children }) {
   const [loading, setLoading] = useState(false);
 
@@ -16,8 +13,6 @@ export function LoadingProvider({ children }) {
     </LoadingContext.Provider>
   );
 }
-
-// 3. Create a custom hook to use the context easily
 export function useLoading() {
   return useContext(LoadingContext);
 }

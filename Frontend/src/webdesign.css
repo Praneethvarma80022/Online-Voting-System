@@ -1,6 +1,6 @@
-/* src/WebDesign.css */
+
 .web-design {
-    background-image: url('/images/background.jpg'); /* Adjust the path to your image */
+    background-image: url('/images/background.jpg');
     background-size: cover;
     background-position: center;
     height: 100vh;

@@ -1,0 +1,23 @@
+
+.footer {
+  background-color: #0d1117; 
+  color: #8b949e; 
+  text-align: center;
+  padding: 2rem 1rem;
+  margin-top: auto; 
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.copy-info h6 {
+  margin: 0.3rem 0;
+  font-weight: 400;
+  font-size: 0.9rem;
+  letter-spacing: 0.5px;
+}
+
+.copyright {
+  font-weight: 600 !important;
+  color: #c9d1d9;
+  margin-top: 0.75rem !important;
+}

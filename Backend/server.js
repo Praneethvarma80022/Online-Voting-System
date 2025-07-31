@@ -6,6 +6,8 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const nodemailer = require('nodemailer');
+const multer = require('multer');
+const path = require('path');
 const User = require('./models/User');
 const Poll = require('./models/poll');
 
@@ -15,9 +17,12 @@ if (!process.env.MONGO_URI || !process.env.JWT_SECRET || !process.env.EMAIL_USER
 }
 
 const app = express();
-
 app.use(cors());
 app.use(express.json());
+
+// Correctly serve static files from both the 'uploads' and 'image' directories
+app.use('/uploads', express.static('uploads'));
+app.use('/image', express.static(path.join(__dirname, '../Frontend/public/image')));
 
 mongoose.connect(process.env.MONGO_URI)
   .then(() => console.log("MongoDB connected successfully!"))
@@ -26,12 +31,40 @@ mongoose.connect(process.env.MONGO_URI)
     process.exit(1);
   });
 
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, 'uploads/');
+  },
+  filename: function (req, file, cb) {
+    cb(null, file.fieldname + '-' + Date.now() + path.extname(file.originalname));
+  }
+});
+
+const upload = multer({
+  storage: storage,
+  limits: { fileSize: 5 * 1024 * 1024 },
+  fileFilter: function (req, file, cb) {
+      const filetypes = /jpeg|jpg|png/;
+      const mimetype = filetypes.test(file.mimetype);
+      const extname = filetypes.test(path.extname(file.originalname).toLowerCase());
+      if (mimetype && extname) {
+          return cb(null, true);
+      }
+      cb(new Error("Error: File upload only supports the following filetypes - " + filetypes));
+  }
+});
+
 const transporter = nodemailer.createTransport({
-  service: 'gmail',
+  host: "smtp.gmail.com",
+  port: 587,
+  secure: false,
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS,
   },
+  tls: {
+    ciphers:'SSLv3'
+  }
 });
 
 async function sendMfaEmail(toEmail, code) {
@@ -39,17 +72,10 @@ async function sendMfaEmail(toEmail, code) {
     from: process.env.EMAIL_USER,
     to: toEmail,
     subject: 'Your Voting System Verification Code',
-    html: `
-        <p>Hello,</p>
-        <p>Your verification code is:</p>
-        <h2 style="text-align: center; letter-spacing: 5px; font-size: 24px;">${code}</h2>
-        <p>This code will expire in 10 minutes.</p>
-        <p>If you did not request this, please ignore this email.</p>
-    `,
+    html: `<p>Hello,</p><p>Your verification code is:</p><h2 style="text-align: center; letter-spacing: 5px; font-size: 24px;">${code}</h2><p>This code will expire in 10 minutes.</p><p>If you did not request this, please ignore this email.</p>`,
   };
   try {
     await transporter.sendMail(mailOptions);
-    console.log(`MFA email sent to ${toEmail}`);
   } catch (error) {
     console.error(`Error sending MFA email to ${toEmail}:`, error);
     throw new Error('Could not send verification email.');
@@ -70,45 +96,41 @@ const authMiddleware = (req, res, next) => {
   }
 };
 
+const adminMiddleware = async (req, res, next) => {
+  try {
+    const user = await User.findById(req.user.id);
+    if (user && user.role === 'admin') {
+      next();
+    } else {
+      res.status(403).json({ message: 'Access denied. Admin role required.' });
+    }
+  } catch (error) {
+    res.status(500).json({ message: 'Server error during role verification.' });
+  }
+};
+
 app.get('/', (req, res) => {
     res.send('API is running...');
 });
 
 app.post('/api/signup', async (req, res) => {
   const { name, email, voterId, password } = req.body;
-
   if (!name || !email || !voterId || !password) {
     return res.status(400).json({ message: 'Please fill out all fields.' });
   }
-
   try {
     const existingUser = await User.findOne({ $or: [{ email: email.toLowerCase() }, { voterId: voterId.toUpperCase() }] });
     if (existingUser) {
       if (existingUser.email === email.toLowerCase()) {
-        return res
-          .status(409)
-          .json({ message: 'A user with this email already exists.' });
+        return res.status(409).json({ message: 'A user with this email already exists.' });
       }
       if (existingUser.voterId === voterId.toUpperCase()) {
-        return res
-          .status(409)
-          .json({ message: 'A user with this Voter ID already exists.' });
+        return res.status(409).json({ message: 'A user with this Voter ID already exists.' });
       }
     }
-
-    const newUser = new User({
-      name,
-      email,
-      voterId,
-      password,
-    });
-
+    const newUser = new User({ name, email, voterId, password });
     await newUser.save();
-
-    res
-      .status(201)
-      .json({ message: 'User created successfully! Please log in.' });
-
+    res.status(201).json({ message: 'User created successfully! Please log in.' });
   } catch (error) {
     if (error.name === 'ValidationError') {
       return res.status(400).json({ message: error.message });
@@ -120,33 +142,25 @@ app.post('/api/signup', async (req, res) => {
 
 app.post('/api/login-request', async (req, res) => {
   const { voterId, password } = req.body;
-
   if (!voterId || !password) {
     return res.status(400).json({ message: 'Please provide voter ID and password.' });
   }
-
   try {
     const user = await User.findOne({ voterId: voterId.toUpperCase() });
     if (!user) {
       return res.status(401).json({ message: 'Invalid credentials.' });
     }
-
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
       return res.status(401).json({ message: 'Invalid credentials.' });
     }
-
     const mfaCode = crypto.randomInt(100000, 999999).toString();
     const mfaCodeExpires = new Date(Date.now() + 10 * 60 * 1000); 
-
     user.mfaCode = mfaCode;
     user.mfaCodeExpires = mfaCodeExpires;
     await user.save();
-
     await sendMfaEmail(user.email, mfaCode);
-    
     res.status(200).json({ message: 'A verification code has been sent to your registered email.' });
-
   } catch (error) {
     console.error('Login request error:', error);
     res.status(500).json({ message: 'Server error. Please try again later.' });
@@ -155,61 +169,101 @@ app.post('/api/login-request', async (req, res) => {
 
 app.post('/api/login-verify', async (req, res) => {
   const { voterId, mfaCode } = req.body;
-
   if (!voterId || !mfaCode) {
     return res.status(400).json({ message: 'Please provide voter ID and authentication code.' });
   }
-
   try {
     const user = await User.findOne({ 
         voterId: voterId.toUpperCase(),
         mfaCode: mfaCode,
         mfaCodeExpires: { $gt: new Date() }
     });
-
     if (!user) {
         return res.status(401).json({ message: 'Invalid or expired authentication code.' });
     }
-    
     user.mfaCode = undefined;
     user.mfaCodeExpires = undefined;
+    
+    const adminIds = ['ABC1234567', 'ZXE1781574'];
+    const userRole = adminIds.includes(user.voterId) ? 'admin' : 'user';
+    
+    user.role = userRole;
     await user.save();
 
-    const userRole = user.voterId === 'ABC1234567' ? 'admin' : 'user';
+    const payload = { user: { id: user.id, role: user.role } };
 
-    const payload = {
-      user: {
-        id: user.id,
-        role: userRole
-      }
-    };
-
-    jwt.sign(
-      payload,
-      process.env.JWT_SECRET,
-      { expiresIn: '24h' },
-      (err, token) => {
+    jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '24h' }, (err, token) => {
         if (err) throw err;
-        
         res.status(200).json({ 
             token,
             user: {
-                name: user.name,
-                role: userRole,
-                hasVoted: user.hasVoted
+                id: user.id, name: user.name, email: user.email,
+                voterId: user.voterId, role: user.role, hasVoted: user.hasVoted,
+                profileImage: user.profileImage
             }
         });
       }
     );
-
   } catch (error) {
-    console.error('Login verification error:', error);
-    res.status(500).json({ message: 'Server error. Please try again later.' });
+    res.status(500).json({ message: 'Server error.' });
   }
 });
 
+app.get('/api/profile/me', authMiddleware, async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id).select('-password');
+    if (!user) {
+      return res.status(404).json({ message: 'User not found.' });
+    }
+    res.json(user);
+  } catch (error) {
+    console.error('Error fetching user profile:', error);
+    res.status(500).json({ message: 'Server error.' });
+  }
+});
 
-app.get('/api/poll', async (req, res) => {
+app.post('/api/profile/upload', authMiddleware, upload.single('profileImage'), async (req, res) => {
+    if (!req.file) {
+      return res.status(400).json({ message: 'No file uploaded.' });
+    }
+    try {
+      const user = await User.findById(req.user.id);
+      if (!user) {
+        return res.status(404).json({ message: 'User not found.' });
+      }
+      user.profileImage = req.file.path;
+      await user.save();
+      res.status(200).json({
+        message: 'Profile image updated successfully!',
+        user: {
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          voterId: user.voterId,
+          role: user.role,
+          hasVoted: user.hasVoted,
+          profileImage: user.profileImage
+        }
+      });
+    } catch (error) {
+      console.error('Profile upload error:', error);
+      res.status(500).json({ message: 'Server error during file upload.' });
+    }
+});
+
+app.get('/api/poll/options', authMiddleware, async (req, res) => {
+  try {
+    const poll = await Poll.findOne().select('-options.votes');
+    if (!poll) {
+      return res.status(404).json({ message: 'No poll found.' });
+    }
+    res.json(poll);
+  } catch (error) {
+    res.status(500).json({ message: 'Server error.' });
+  }
+});
+
+app.get('/api/poll/results', authMiddleware, adminMiddleware, async (req, res) => {
   try {
     const poll = await Poll.findOne();
     if (!poll) {
@@ -217,7 +271,6 @@ app.get('/api/poll', async (req, res) => {
     }
     res.json(poll);
   } catch (error) {
-    console.error('Error fetching poll:', error);
     res.status(500).json({ message: 'Server error.' });
   }
 });
@@ -225,38 +278,27 @@ app.get('/api/poll', async (req, res) => {
 app.post('/api/vote', authMiddleware, async (req, res) => {
   const { optionId } = req.body;
   const userId = req.user.id;
-
   try {
     const user = await User.findById(userId);
-    if (!user) {
-        return res.status(404).json({ message: 'User not found.' });
-    }
-    if (user.hasVoted) {
-      return res.status(400).json({ message: 'You have already voted.' });
-    }
-
+    if (!user) { return res.status(404).json({ message: 'User not found.' }); }
+    if (user.hasVoted) { return res.status(400).json({ message: 'You have already voted.' }); }
+    
     const poll = await Poll.findOneAndUpdate(
       { "options._id": optionId },
       { $inc: { "options.$.votes": 1 } },
       { new: true }
     );
-
-    if (!poll) {
-      return res.status(404).json({ message: 'Poll or option not found.' });
-    }
-
+    if (!poll) { return res.status(404).json({ message: 'Poll or option not found.' }); }
+    
     user.hasVoted = true;
     await user.save();
-
     res.json({ message: 'Vote successfully recorded!', poll });
-
   } catch (error) {
-    console.error('Error processing vote:', error);
     res.status(500).json({ message: 'Server error.' });
   }
 });
 
-app.get('/api/create-initial-poll', async (req, res) => {
+app.get('/api/create-initial-poll', authMiddleware, adminMiddleware, async (req, res) => {
     try {
         await Poll.deleteMany({});
         const initialPoll = new Poll({
@@ -275,10 +317,9 @@ app.get('/api/create-initial-poll', async (req, res) => {
     }
 });
 
-app.get('/api/reset-all-for-testing', async (req, res) => {
+app.get('/api/reset-all-for-testing', authMiddleware, adminMiddleware, async (req, res) => {
     try {
         await User.updateMany({}, { $set: { hasVoted: false } });
-
         await Poll.deleteMany({});
         const initialPoll = new Poll({
             title: "AP ELECTIONS",
@@ -290,13 +331,11 @@ app.get('/api/reset-all-for-testing', async (req, res) => {
             ]
         });
         await initialPoll.save();
-        
         res.send("All users' voting status and poll counts have been reset successfully!");
     } catch (error) {
         res.status(500).send("Error resetting data: " + error.message);
     }
 });
-
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server is running on port ${PORT}`));

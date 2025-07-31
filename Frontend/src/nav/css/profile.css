@@ -1,0 +1,187 @@
+.profile-page-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 40px 20px;
+  min-height: calc(100vh - 80px);
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+}
+
+.profile-container {
+  background: #ffffff;
+  padding: 30px 40px;
+  border-radius: 16px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  max-width: 700px;
+  text-align: left;
+  border: 1px solid #e9ecef;
+}
+
+.profile-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 30px;
+  border-bottom: 1px solid #e9ecef;
+  padding-bottom: 30px;
+}
+
+.profile-picture {
+  width: 150px;
+  height: 150px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin-bottom: 20px;
+  border: 5px solid #ffffff;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+  background-color: #f8f9fa;
+}
+
+.profile-title {
+  text-align: center;
+  margin-bottom: 0;
+  font-size: 2.25rem;
+  font-weight: 600;
+  color: #212529;
+}
+
+.profile-upload-section {
+  background-color: #f8f9fa;
+  border: 1px solid #e9ecef;
+  border-radius: 12px;
+  padding: 25px;
+  margin-bottom: 30px;
+  text-align: center;
+}
+
+.profile-upload-section h3 {
+  margin-top: 0;
+  margin-bottom: 20px;
+  color: #495057;
+  font-weight: 500;
+  font-size: 1.2rem;
+}
+
+.profile-upload-section form {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 15px;
+}
+
+.profile-upload-section input[type="file"] {
+  color: #495057;
+  font-size: 0.95rem;
+}
+
+.profile-upload-section input[type="file"]::file-selector-button {
+  margin-right: 15px;
+  border: 1px solid #ced4da;
+  padding: 8px 12px;
+  border-radius: 6px;
+  background-color: #ffffff;
+  color: #007bff;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+}
+
+.profile-upload-section input[type="file"]::file-selector-button:hover {
+  background-color: #007bff;
+  color: #ffffff;
+  border-color: #007bff;
+}
+
+.profile-upload-section button {
+  background-image: linear-gradient(to right, #007bff 0%, #0056b3 100%);
+  color: white;
+  border: none;
+  padding: 12px 25px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(0, 123, 255, 0.2);
+}
+
+.profile-upload-section button:disabled {
+  background-image: none;
+  background-color: #ced4da;
+  box-shadow: none;
+  cursor: not-allowed;
+}
+
+.profile-upload-section button:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 123, 255, 0.3);
+}
+
+.error-message {
+  color: #dc3545;
+  margin-top: 10px;
+  font-weight: 500;
+}
+
+.info-message {
+  color: #28a745;
+  margin-top: 10px;
+  font-weight: 500;
+}
+
+.profile-details {
+  display: flex;
+  flex-direction: column;
+}
+
+.detail-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 18px 10px;
+  border-bottom: 1px solid #e9ecef;
+  font-size: 1.1rem;
+}
+
+.detail-item:last-child {
+  border-bottom: none;
+}
+
+.detail-item strong {
+  color: #6c757d;
+  font-weight: 500;
+  margin-right: 20px;
+}
+
+.detail-item span {
+  color: #343a40;
+  word-break: break-all;
+  font-weight: 500;
+  text-align: right;
+}
+
+.detail-item .user-role {
+  text-transform: capitalize;
+  font-weight: 600;
+  color: #ffffff;
+  background-color: #007bff;
+  padding: 4px 10px;
+  border-radius: 50px;
+  font-size: 0.9rem;
+}
+
+@media (max-width: 768px) {
+  .profile-container {
+    padding: 20px;
+  }
+  .detail-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  .detail-item span {
+    text-align: left;
+  }
+}

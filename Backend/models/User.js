@@ -1,5 +1,3 @@
-// models/User.js
-
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 
@@ -22,7 +20,7 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: [true, 'Voter ID is required'],
     unique: true,
-    uppercase: true, // Automatically convert voterId to uppercase
+    uppercase: true,
     match: [/^([A-Z]{3}\d{7})$/, 'Invalid voter ID format'],
   },
   password: {
@@ -33,18 +31,25 @@ const userSchema = new mongoose.Schema({
     type: Boolean,
     default: false
   },
-  // --- NEW FIELDS FOR MFA ---
+  role: {
+    type: String,
+    enum: ['user', 'admin'],
+    default: 'user'
+  },
   mfaCode: {
     type: String,
-    private: true, // Exclude from default query results
+    private: true,
   },
   mfaCodeExpires: {
     type: Date,
     private: true,
+  },
+  profileImage: {
+    type: String,
+    default: '' 
   }
 });
 
-// Password hashing pre-save hook
 userSchema.pre('save', async function (next) {
   if (!this.isModified('password')) {
     return next();
